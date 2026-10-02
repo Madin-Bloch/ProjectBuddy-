@@ -1,0 +1,265 @@
+# ProjectBuddy — AI handoff context
+
+Give this file to another AI before asking it to change the product.
+
+Last updated: 2026-10-02  
+Repo: https://github.com/MadinBloch/ProjectBuddy-  
+Branch: `main`  
+Founder: Madin Bloch
+
+---
+
+## What this product is
+
+ProjectBuddy is a **tool**, not a sample student project.
+
+A user uploads a **ZIP** of their own repository, or pastes a **public GitHub URL**. ProjectBuddy reads the actual files and generates submission material:
+
+- Project report
+- System diagrams (SVG)
+- 12-slide presentation
+- Viva Q&A
+- Demo script
+- Project analysis / health / evidence
+- Individual file downloads and a complete ZIP
+
+Price shown in the product: **₹249 per project**.
+
+English only. Zip-first. Public GitHub optional.
+
+---
+
+## Hard rules (do not break)
+
+1. **Evidence-first.** Stack, tables, routes, modules, APIs come only from uploaded source. Missing facts are **omitted**, never invented.
+2. **Never** use Library Management System as an example in the product UI or marketing copy.
+3. **Never** use fake stats or banned phrases: `college pack`, `IEEE-style`, `10,000+ students`, `4.9/5`, fake testimonials.
+4. Keep **Node.js + Express + Vite/React**. Do not migrate to Laravel.
+5. Express v5: do **not** use `app.get("*")`.
+6. Scan rejects empty/unknown folders. Tiny repos are OK if a stack is detected (`files.length < 2` is allowed).
+7. Do not commit `data/`, `node_modules`, secrets, or API keys.
+8. User project LLM keys must be `USER_LLM_*` placeholders. Never copy Agent environment keys into this repo.
+9. Preview environment exposes **one port**. Frontend Vite (5173) proxies `/api` to backend (3001).
+
+---
+
+## Brand copy (landing)
+
+- Label: `FROM CODE TO SUBMISSION`
+- Headline: `Your Project In. Everything You Need to Submit — Out.`
+- Primary CTA: `Upload Project ZIP`
+- Secondary CTA: `Paste GitHub URL`
+- Trust: `No setup required · Based on your actual project · Preview before download`
+- Pricing CTA: `Create My Project Pack`
+
+If an example is shown, label it **Example project**. Keep examples generic (detected repository, not Student/Hospital/Library/E-commerce as the product identity).
+
+---
+
+## How to run
+
+```bash
+bash start.sh
+```
+
+Or separately:
+
+```bash
+# Backend — port 3001
+cd backend
+npm install
+node src/index.js
+
+# Frontend — port 5173
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend: http://localhost:5173  
+API: http://localhost:3001  
+Vite proxies `/api` to `http://127.0.0.1:3001`.
+
+Tests:
+
+```bash
+cd backend
+node --test test/pipeline.test.js
+```
+
+Five fixtures must pass: Laravel, Express+Mongo, Django, Flask, Spring Boot.
+
+---
+
+## Architecture
+
+```
+ZIP / public GitHub
+        |
+        v
+  backend/src/scan.js          unzip or fetch repo
+        |
+        v
+  intelligence.js              evidence model (stack, tables, routes, auth, health)
+        |
+        v
+  ai.js                        optional USER_LLM_* understanding; else deterministic
+        |
+        v
+  content.js                   report, viva, demo, slides from evidence
+        |
+        v
+  validator.js                 strip filler / unverified stack claims
+        |
+        v
+  diagrams.js + generate.js    SVG diagrams (omit missing) + pack ZIP
+        |
+        v
+  frontend studio              preview, edit, regenerate, per-file / full ZIP download
+```
+
+Runtime data (generated, gitignored):
+
+- `data/store.json`
+- `data/projects/`
+- `data/tmp/`
+
+---
+
+## File map
+
+### Product docs
+
+| File | What it is |
+|---|---|
+| `AI-CONTEXT.md` | This handoff file for another AI |
+| `PROJECTBUDDY.md` | Product overview, API, flow, pack contents |
+| `README.md` | Short setup |
+| `docs/superpowers/specs/2026-09-30-projectbuddy-design.md` | Original v1 design spec |
+
+### Frontend (`frontend/`)
+
+| File | What it is |
+|---|---|
+| `package.json` | Vite + React scripts |
+| `vite.config.js` | Port 5173, `/api` proxy, `allowedHosts: ['.monkeycode-ai.live']` |
+| `index.html` | HTML shell + page title |
+| `src/main.jsx` | React mount |
+| `src/Landing.jsx` | Marketing landing (hero, upload, flow, outputs, diagrams, PPT, FAQ, footer) |
+| `src/App.jsx` | Theme, nav, zip/GitHub handlers, scan, questions, studio |
+| `src/styles.css` | Light + dark premium SaaS theme |
+
+### Backend (`backend/`)
+
+| File | What it is |
+|---|---|
+| `package.json` | Express app |
+| `src/index.js` | HTTP API, jobs, download |
+| `src/scan.js` | Unzip / GitHub fetch + intelligence |
+| `src/intelligence.js` | Evidence model |
+| `src/ai.js` | Optional LLM understanding |
+| `src/content.js` | Grounded report / viva / demo / slides |
+| `src/validator.js` | Strip filler and unverified tech |
+| `src/generate.js` | Pack + progress |
+| `src/diagrams.js` | Evidence diagrams; omit missing |
+| `src/util.js` | Shared helpers |
+| `test/pipeline.test.js` | 5-stack fixture tests |
+| `test/fixtures/` | Sample repos for tests (includes a Laravel library fixture used **only** as scanner input, not as marketing) |
+
+### Scripts
+
+| File | What it is |
+|---|---|
+| `start.sh` | Install if needed, start API then Vite |
+| `.gitignore` | Ignores `data/`, `node_modules`, archives, secrets |
+
+---
+
+## API
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/health` | Health check |
+| POST | `/api/projects/upload` | Raw zip body, starts scan |
+| POST | `/api/projects` | `{ github }` public repo URL |
+| GET | `/api/projects/:id` | Status, scan, preview |
+| POST | `/api/projects/:id/generate` | `{ answers }` |
+| POST | `/api/projects/:id/section` | Edit one section |
+| POST | `/api/projects/:id/regenerate` | Regenerate a section or all |
+| POST | `/api/projects/:id/unlock` | Mark paid (preview unlock) |
+| GET | `/api/projects/:id/download` | Full zip |
+| GET | `/api/projects/:id/file?path=&download=1` | One pack file |
+
+---
+
+## User flow in the UI
+
+1. **Landing** — upload ZIP or paste GitHub URL.
+2. **Scan** — detect stack / files / tables / routes. Reject empty/unknown.
+3. **Questions** — student name, enrollment, college, course, guide, year, title, problem, future work.
+4. **Generate** — evidence-first pack with progress.
+5. **Studio** — tabs: Report, Diagrams, PPT, Viva, Demo, Files. Edit / Regenerate / download.
+6. **Download** — full ZIP or individual files.
+
+Theme toggle (light/dark) is in the navbar and persisted as `localStorage.pb-theme`.
+
+---
+
+## What changed in this UI pass (2026-10-02)
+
+This commit is a **visual + copy rewrite of the frontend**. Backend generation pipeline was already on `main` (`9e73362`) and was not redesigned.
+
+### Added
+
+- `frontend/src/Landing.jsx` — full marketing page extracted from `App.jsx`
+- `AI-CONTEXT.md` — this file
+
+### Changed
+
+- `frontend/src/App.jsx` — light/dark theme, sticky nav, zip/GitHub handlers, studio/questions/scan screens use the new theme
+- `frontend/src/styles.css` — new light (`#f4f6fb`) and dark (`#080B14` / `#111626`) SaaS theme, indigo/blue accents
+- `frontend/index.html` — title matches brand headline
+- `README.md` / `PROJECTBUDDY.md` — removed banned `IEEE-style` / “college submission pack” wording
+
+### Landing sections now present
+
+Hero, upload card, 4-step flow, six output cards, diagram workspace, PPT preview, live preview tabs, stack chips, compare, ₹249 pricing, FAQ accordion, dark footer.
+
+### Not changed
+
+Backend scan/generate/validator/diagrams, API routes, fixture tests, pricing amount, zip/GitHub generation flow.
+
+---
+
+## What v1 does not include
+
+Private GitHub OAuth, college template upload, Hindi copy, monthly plans, live Razorpay/UPI charge, writing the user's application code, guaranteed “no plagiarism.”
+
+Preview unlock currently allows download without a live payment.
+
+---
+
+## Safe next work
+
+Good follow-ups:
+
+- Live Razorpay / UPI at ₹249
+- PDF/DOCX export
+- Login that actually authenticates
+- Stronger diagram rendering when evidence exists
+- Keep marketing examples generic
+
+Do not:
+
+- Invent tables/routes in reports
+- Put Library Management on the landing page
+- Add fake social proof
+- Commit tokens or `data/`
+
+---
+
+## Git notes
+
+- Remote: `origin` → `https://github.com/MadinBloch/ProjectBuddy-.git`
+- Do not reuse any personal access token that was pasted in chat. If push needs auth, use Git credential helper / a new token.
+- Never force-push `main` unless the owner asks.

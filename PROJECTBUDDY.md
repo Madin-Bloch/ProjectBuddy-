@@ -2,7 +2,7 @@
 
 ProjectBuddy is a small SaaS for Indian BCA, MCA, BTech and Diploma students.
 
-A student uploads a **project zip** (or pastes a public GitHub URL). The app reads the real source files, detects the stack, then generates a college submission pack: IEEE-style report, diagrams, 12-slide PPT, viva Q&A, demo script, reflection and suggestions.
+A user uploads a **project zip** (or pastes a public GitHub URL). The app reads the real source files, detects the stack, then generates submission material: report, diagrams, 12-slide PPT, viva Q&A, demo script, reflection and suggestions.
 
 It is **English only**. It is **not** a Laravel-only wrapper. PHP, Laravel, Node, React, Python, Java and similar student repos all scan.
 
@@ -33,7 +33,7 @@ Colleges ask for a bound report, ER / use-case / DFD diagrams, a PPT, and viva a
 
 | File | What it is |
 |---|---|
-| `01-project-report.html` / `.md` | IEEE-style report |
+| `01-project-report.html` / `.md` | Project report |
 | `02-srs.md` | Software requirements |
 | `03-diagrams/*.svg` | Use case, ER, DFD 0, DFD 1, architecture, sequence, activity, deployment |
 | `04-viva-qa.md` | Viva questions from detected tables and routes |
@@ -71,6 +71,8 @@ Long-term the founder can rebuild the API in Laravel. The product does not depen
 | POST | `/api/projects` | `{ github }` public repo URL |
 | GET | `/api/projects/:id` | Status, scan, preview |
 | POST | `/api/projects/:id/generate` | `{ answers }` |
+| POST | `/api/projects/:id/section` | Edit one generated section |
+| POST | `/api/projects/:id/regenerate` | Regenerate a section or the full pack |
 | POST | `/api/projects/:id/unlock` | Mark paid (preview unlock) |
 | GET | `/api/projects/:id/download` | Full zip |
 | GET | `/api/projects/:id/file?path=&download=1` | One pack file |
@@ -109,6 +111,7 @@ Zip the project folder before upload. Do not include `node_modules` or `vendor`.
 ### Product docs
 
 - `PROJECTBUDDY.md` — this file
+- `AI-CONTEXT.md` — handoff file for another AI (what each file is, rules, recent changes)
 - `docs/superpowers/specs/2026-09-30-projectbuddy-design.md` — v1 design spec
 
 ### Backend
@@ -130,8 +133,9 @@ Zip the project folder before upload. Do not include `node_modules` or `vendor`.
 - `frontend/vite.config.js` — port 5173, `/api` proxy, allowedHosts
 - `frontend/index.html` — HTML shell
 - `frontend/src/main.jsx` — React mount
-- `frontend/src/App.jsx` — landing, scan, questions, pack studio
-- `frontend/src/styles.css` — SaaS UI
+- `frontend/src/Landing.jsx` — marketing landing (hero, upload, outputs, diagrams, pricing, FAQ)
+- `frontend/src/App.jsx` — theme, nav, zip/GitHub handlers, scan, questions, pack studio
+- `frontend/src/styles.css` — light/dark premium SaaS theme
 
 ### Scripts
 

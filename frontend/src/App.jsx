@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import Landing from "./Landing.jsx";
 
 export default function App() {
   const [step, setStep] = useState("home");
@@ -10,6 +11,12 @@ export default function App() {
   const [tab, setTab] = useState("report");
   const [answers, setAnswers] = useState(emptyAnswers());
   const [editOpen, setEditOpen] = useState(null);
+  const [theme, setTheme] = useState(() => localStorage.getItem("pb-theme") || "light");
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("pb-theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     if (!project?.id) return;
@@ -174,138 +181,51 @@ export default function App() {
     <div className="shell">
       <header className="nav">
         <div className="wrap nav-inner">
-          <div className="brand"><div className="mark">P</div> ProjectBuddy</div>
-          <div className="nav-links">
-            <a href="#how">How it works</a>
-            <a href="#pack">What’s included</a>
-            <a href="#pricing">Pricing</a>
-            <span>Rs 249 / project</span>
-            <button className="btn ghost sm" onClick={reset}>New project</button>
+          <button className="brand" type="button" onClick={reset}>
+            <div className="mark">P</div> ProjectBuddy
+          </button>
+          {step === "home" ? (
+            <nav className="nav-links">
+              <a href="#how">How it works</a>
+              <a href="#pack">What's included</a>
+              <a href="#examples">Examples</a>
+              <a href="#pricing">Pricing</a>
+              <a href="#faq">FAQ</a>
+            </nav>
+          ) : (
+            <nav className="nav-links">
+              <button className="btn ghost sm" type="button" onClick={reset}>New project</button>
+            </nav>
+          )}
+          <div className="nav-right">
+            <button
+              className="theme-toggle"
+              type="button"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? "Light mode" : "Dark mode"}
+            </button>
+            <button className="btn ghost sm" type="button">Login</button>
+            <a className="btn primary sm" href="#start" onClick={(e) => { if (step !== "home") { e.preventDefault(); reset(); } }}>Create Project</a>
           </div>
         </div>
       </header>
 
       {step === "home" && (
-        <main>
-          <section className="wrap hero">
-            <div>
-              <div className="kicker">SaaS for BCA · MCA · BTech · Diploma</div>
-              <h1>Turn your project files into a submission-ready college pack.</h1>
-              <p className="lead">
-                Upload a zip. ProjectBuddy reads the real code and builds the report, diagrams, slides and viva answers — so you stop pasting ChatGPT essays that do not match your project.
-              </p>
-              <div className="hero-actions">
-                <label className="btn primary file-btn">
-                  Upload project zip
-                  <input type="file" accept=".zip" hidden onChange={(e) => startZip(e.target.files[0])} />
-                </label>
-                <a className="btn ghost" href="#start">Paste GitHub instead</a>
-              </div>
-              <div className="trust">
-                <span>Grounded in your files</span>
-                <span>8 diagrams included</span>
-                <span>12-slide presentation</span>
-                <span>English only</span>
-              </div>
-            </div>
-            <div className="product-card">
-              <div className="product-top">
-                <div className="window"><span className="dot" /><span className="dot" /><span className="dot" /></div>
-                <div className="slide-preview">
-                  <div className="muted" style={{ fontSize: 12, fontWeight: 700 }}>SLIDE 07 · ER DIAGRAM</div>
-                  <h3>Library Management System</h3>
-                  <ul>
-                    <li>books, members, issues</li>
-                    <li>Detected from Laravel migrations</li>
-                    <li>Export SVG for the bound report</li>
-                  </ul>
-                </div>
-              </div>
-              <div className="product-bottom">
-                <div className="mini"><strong>IEEE report</strong><span>Abstract to references</span></div>
-                <div className="mini"><strong>Viva Q&amp;A</strong><span>From tables and routes</span></div>
-              </div>
-            </div>
-          </section>
-
-          <section className="wrap section" id="pack">
-            <h2>Everything your college asks for</h2>
-            <p className="muted">One pack. Download all, or each file on its own.</p>
-            <div className="grid4">
-              {[
-                ["01", "Project report", "IEEE-style chapters from your stack and modules."],
-                ["02", "Diagrams", "Use case, ER, DFD 0/1, architecture, sequence, activity, deployment."],
-                ["03", "Presentation", "12 slides you can present in internal or external."],
-                ["04", "Viva + demo", "Questions from your code, plus a 3-minute demo script."],
-              ].map(([n, t, d]) => (
-                <div className="card" key={n}>
-                  <div className="ico">{n}</div>
-                  <h3>{t}</h3>
-                  <p className="muted">{d}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="wrap section" id="how">
-            <h2>How it works</h2>
-            <div className="steps">
-              {[
-                ["1", "Upload zip or GitHub", "No private login. Zip is enough."],
-                ["2", "Confirm the scan", "Stack, tables, routes, modules."],
-                ["3", "Add college details", "Name, enrollment, title, problem."],
-                ["4", "Preview and download", "All files, or one file at a time."],
-              ].map(([n, t, d]) => (
-                <div className="card step" key={n}>
-                  <div className="n">{n}</div>
-                  <h3>{t}</h3>
-                  <p className="muted">{d}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="wrap section" id="pricing">
-            <div className="pricing">
-              <div className="card price-box">
-                <div className="kicker">Simple pricing</div>
-                <div className="amount">Rs 249</div>
-                <p className="muted">Per project. Preview this build unlocks download without a live UPI charge.</p>
-                <ul>
-                  <li>Report, SRS, 8 diagrams, 12 slides</li>
-                  <li>Viva Q&amp;A, demo script, suggestions</li>
-                  <li>Download the full zip or separate files</li>
-                </ul>
-              </div>
-              <div className="card" id="start">
-                <h3>Start from a zip</h3>
-                <p className="muted">Zip the project folder. Skip node_modules and vendor.</p>
-                <div
-                  className={`drop ${drag ? "drag" : ""}`}
-                  onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
-                  onDragLeave={() => setDrag(false)}
-                  onDrop={(e) => { e.preventDefault(); setDrag(false); startZip(e.dataTransfer.files[0]); }}
-                >
-                  <label className="btn primary file-btn">
-                    Choose zip
-                    <input type="file" accept=".zip" hidden onChange={(e) => startZip(e.target.files[0])} />
-                  </label>
-                  <div className="or">or public GitHub URL</div>
-                  <form className="row" onSubmit={startGithub}>
-                    <input type="url" placeholder="https://github.com/username/project" value={github} onChange={(e) => setGithub(e.target.value)} />
-                    <button className="btn ghost" type="submit">Scan</button>
-                  </form>
-                  {error && <div className="err">{error}</div>}
-                </div>
-              </div>
-            </div>
-          </section>
-          <footer className="wrap site">ProjectBuddy reads your files. It does not invent tables that are not in the project.</footer>
-        </main>
+        <Landing
+          github={github}
+          setGithub={setGithub}
+          drag={drag}
+          setDrag={setDrag}
+          startZip={startZip}
+          startGithub={startGithub}
+          error={error}
+        />
       )}
 
       {step === "scan" && (
-        <main className="wrap page">
+        <main className="wrap page studio">
           <div className="panel">
             <div className="kicker">Working</div>
             <h2>{project?.status === "generating" ? "Building your pack from source" : "Reading your project"}</h2>
@@ -322,7 +242,7 @@ export default function App() {
       )}
 
       {step === "questions" && project?.scan && (
-        <main className="wrap page">
+        <main className="wrap page studio">
           <div className="panel">
             <div className="kicker">Scan complete — your project, not a template</div>
             <h2>{project.scan.stackLabel || stackLine || "Project scan"}</h2>
@@ -359,7 +279,7 @@ export default function App() {
       )}
 
       {step === "preview" && (
-        <main className="wrap page">
+        <main className="wrap page studio">
           <div className="studio-head">
             <div>
               <div className="kicker">Pack ready · grounded in source</div>

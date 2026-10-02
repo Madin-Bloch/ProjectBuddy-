@@ -1,6 +1,6 @@
 # ProjectBuddy
 
-Turn a student project zip (or public GitHub URL) into a college submission pack: IEEE-style report, diagrams, slides, viva Q&A, and demo script.
+Turn a project zip (or public GitHub URL) into submission material: report, diagrams, slides, viva Q&A, and demo script.
 
 English only. Grounded in the uploaded source. Missing tables, APIs, or modules are omitted, not invented.
 
