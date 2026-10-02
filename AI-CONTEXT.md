@@ -45,12 +45,17 @@ English only. Zip-first. Public GitHub optional.
 
 ## Brand copy (landing)
 
-- Label: `FROM CODE TO SUBMISSION`
-- Headline: `Your Project In. Everything You Need to Submit — Out.`
-- Primary CTA: `Upload Project ZIP`
+- Label: `FROM CODE TO SUBMISSION` (top utility bar)
+- Headline: `Ship the submission, not the busywork.`
+- Primary CTA: `Upload project ZIP`
 - Secondary CTA: `Paste GitHub URL`
-- Trust: `No setup required · Based on your actual project · Preview before download`
-- Pricing CTA: `Create My Project Pack`
+- Trust: `ZIP or public repository · Preview before you download · No setup required`
+- Pricing CTA: `Create my project pack`
+- Closing CTA: `Your code is done. Finish the submission.`
+
+Design system: warm-paper neutrals with a deep-teal brand (`#0f766e`) and terracotta accent
+(`#c2410c`). Display headings use the Newsreader serif, UI uses Inter, and eyebrows/evidence use
+JetBrains Mono. Avoid generic indigo/violet gradients and default purple SaaS styling.
 
 If an example is shown, label it **Example project**. Keep examples generic (detected repository, not Student/Hospital/Library/E-commerce as the product identity).
 
@@ -145,9 +150,9 @@ Runtime data (generated, gitignored):
 | `vite.config.js` | Port 5173, `/api` proxy, `allowedHosts: ['.monkeycode-ai.live']` |
 | `index.html` | HTML shell + page title |
 | `src/main.jsx` | React mount |
-| `src/Landing.jsx` | Marketing landing (hero, upload, flow, outputs, diagrams, PPT, FAQ, footer) |
-| `src/App.jsx` | Theme, nav, zip/GitHub handlers, scan, questions, studio |
-| `src/styles.css` | Light + dark premium SaaS theme |
+| `src/Landing.jsx` | Marketing landing (hero + app-window mock, stack marquee, upload, steps, pack cards, diagram workspace, deck, live preview, compare, pricing, FAQ, CTA band, footer) |
+| `src/App.jsx` | Theme, topbar, nav, zip/GitHub handlers, scan, questions, studio |
+| `src/styles.css` | Design system: warm-paper + deep-teal, serif/Inter/mono, light + dark |
 
 ### Backend (`backend/`)
 
@@ -205,29 +210,39 @@ Theme toggle (light/dark) is in the navbar and persisted as `localStorage.pb-the
 
 ---
 
-## What changed in this UI pass (2026-10-02)
+## What changed in this UI pass (2026-10-02, design system rewrite)
 
-This commit is a **visual + copy rewrite of the frontend**. Backend generation pipeline was already on `main` (`9e73362`) and was not redesigned.
+This commit is a **visual + copy rewrite of the frontend** to look like a designed product rather
+than a template. Backend generation pipeline was not touched.
 
 ### Added
 
-- `frontend/src/Landing.jsx` — full marketing page extracted from `App.jsx`
-- `AI-CONTEXT.md` — this file
+- `frontend/src/Landing.jsx` — full marketing page with an inline SVG icon set, a real app-window
+  hero mock, a stack marquee, a CTA band, and a five-column footer
+- Inline `SunIcon` / `MoonIcon` theme toggle in `App.jsx`
 
 ### Changed
 
-- `frontend/src/App.jsx` — light/dark theme, sticky nav, zip/GitHub handlers, studio/questions/scan screens use the new theme
-- `frontend/src/styles.css` — new light (`#f4f6fb`) and dark (`#080B14` / `#111626`) SaaS theme, indigo/blue accents
-- `frontend/index.html` — title matches brand headline
-- `README.md` / `PROJECTBUDDY.md` — removed banned `IEEE-style` / “college submission pack” wording
+- `frontend/src/styles.css` — full design-system rewrite: warm paper (`#f6f5f1`) light theme and
+  near-black (`#0a0c0e`) dark theme, deep-teal brand + terracotta accent, serif display type,
+  refined radii/shadows, underline tabs, and a redesigned studio
+- `frontend/index.html` — new title/meta and the Inter + Newsreader + JetBrains Mono font stack
+- `frontend/src/App.jsx` — top utility bar, refined nav, studio/scan/questions screens restyled
+- `backend/src/index.js` + `frontend/vite.config.js` — API port is now `API_PORT` (default 3001);
+  the frontend binds `PORT` (default 5173) so the two-process preview is deterministic
+- `start.sh` — POSIX `sh`, idempotent installs, fixed `API_PORT=3001` / `PORT=5173`
+- Removed the non-functional `Login` button (v1 has no auth; no fake UI)
 
 ### Landing sections now present
 
-Hero, upload card, 4-step flow, six output cards, diagram workspace, PPT preview, live preview tabs, stack chips, compare, ₹249 pricing, FAQ accordion, dark footer.
+Top bar, hero + app-window mock, stack marquee, upload dropzone, 4-step flow, six output cards,
+diagram workspace, deck track, live preview tabs, compare, ₹249 pricing, FAQ accordion, CTA band,
+dark footer.
 
 ### Not changed
 
-Backend scan/generate/validator/diagrams, API routes, fixture tests, pricing amount, zip/GitHub generation flow.
+Backend scan/generate/validator/diagrams logic, API routes, fixture tests, pricing amount,
+zip/GitHub generation flow.
 
 ---
 

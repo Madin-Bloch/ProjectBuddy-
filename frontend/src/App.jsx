@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import Landing from "./Landing.jsx";
 
+const NAV_LINKS = [
+  ["#how", "How it works"],
+  ["#pack", "What's included"],
+  ["#diagrams", "Diagrams"],
+  ["#pricing", "Pricing"],
+  ["#faq", "FAQ"],
+];
+
 export default function App() {
   const [step, setStep] = useState("home");
   const [busy, setBusy] = useState(false);
@@ -179,6 +187,11 @@ export default function App() {
 
   return (
     <div className="shell">
+      <div className="topbar">
+        <span className="mono">From code to submission</span> — report, diagrams, deck and viva from
+        your own repository
+      </div>
+
       <header className="nav">
         <div className="wrap nav-inner">
           <button className="brand" type="button" onClick={reset}>
@@ -186,28 +199,30 @@ export default function App() {
           </button>
           {step === "home" ? (
             <nav className="nav-links">
-              <a href="#how">How it works</a>
-              <a href="#pack">What's included</a>
-              <a href="#examples">Examples</a>
-              <a href="#pricing">Pricing</a>
-              <a href="#faq">FAQ</a>
+              {NAV_LINKS.map(([href, label]) => (
+                <a key={href} href={href}>{label}</a>
+              ))}
             </nav>
           ) : (
             <nav className="nav-links">
-              <button className="btn ghost sm" type="button" onClick={reset}>New project</button>
+              <button className="btn link" type="button" onClick={reset}>
+                ← New project
+              </button>
             </nav>
           )}
           <div className="nav-right">
             <button
-              className="theme-toggle"
+              className="icon-btn"
               type="button"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               aria-label="Toggle theme"
+              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             >
-              {theme === "dark" ? "Light mode" : "Dark mode"}
+              {theme === "dark" ? <SunIcon /> : <MoonIcon />}
             </button>
-            <button className="btn ghost sm" type="button">Login</button>
-            <a className="btn primary sm" href="#start" onClick={(e) => { if (step !== "home") { e.preventDefault(); reset(); } }}>Create Project</a>
+            <a className="btn primary" href="#start" onClick={(e) => { if (step !== "home") { e.preventDefault(); reset(); } }}>
+              Create project
+            </a>
           </div>
         </div>
       </header>
@@ -226,9 +241,13 @@ export default function App() {
 
       {step === "scan" && (
         <main className="wrap page studio">
-          <div className="panel">
-            <div className="kicker">Working</div>
-            <h2>{project?.status === "generating" ? "Building your pack from source" : "Reading your project"}</h2>
+          <div className="panel" style={{ maxWidth: 660, margin: "40px auto 0" }}>
+            <div className="kicker">{project?.status === "generating" ? "Generating" : "Analyzing"}</div>
+            <h2>
+              {project?.status === "generating"
+                ? "Building your pack from source"
+                : "Reading your project"}
+            </h2>
             <p className="muted">
               {project?.status === "generating"
                 ? (project.progress?.label || "Writing only what the repository supports.")
@@ -243,11 +262,12 @@ export default function App() {
 
       {step === "questions" && project?.scan && (
         <main className="wrap page studio">
-          <div className="panel">
+          <div className="panel" style={{ maxWidth: 860, margin: "0 auto" }}>
             <div className="kicker">Scan complete — your project, not a template</div>
             <h2>{project.scan.stackLabel || stackLine || "Project scan"}</h2>
             <p className="muted">
-              {project.scan.fileCount} files · {project.scan.tables?.length || 0} tables · {project.scan.routes?.length || 0} routes · {project.scan.models?.length || 0} models
+              {project.scan.fileCount} files · {project.scan.tables?.length || 0} tables ·{" "}
+              {project.scan.routes?.length || 0} routes · {project.scan.models?.length || 0} models
               {project.scan.confidence != null ? ` · confidence ${Math.round(project.scan.confidence * 100)}%` : ""}
             </p>
             <div className="chips">{(project.scan.modules || []).map((m) => <span className="chip" key={m}>{m}</span>)}</div>
@@ -272,7 +292,9 @@ export default function App() {
                 <div className="full"><label>Future work</label><textarea value={answers.futureWork} onChange={(e) => setAnswers({ ...answers, futureWork: e.target.value })} /></div>
               </div>
               {error && <div className="err">{error}</div>}
-              <p><button className="btn primary" type="submit" disabled={busy}>Generate pack</button></p>
+              <p style={{ marginTop: 20 }}>
+                <button className="btn primary lg" type="submit" disabled={busy}>Generate pack</button>
+              </p>
             </form>
           </div>
         </main>
@@ -288,7 +310,7 @@ export default function App() {
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <button className="btn ghost" onClick={() => regenerate("all")} disabled={busy}>Regenerate pack</button>
-              <button className="btn dark" onClick={unlockAndDownload} disabled={busy}>Download all (zip)</button>
+              <button className="btn primary" onClick={unlockAndDownload} disabled={busy}>Download all (zip)</button>
             </div>
           </div>
           <HealthBlock health={preview.health || project.scan?.health} />
@@ -331,18 +353,18 @@ export default function App() {
           {tab === "slides" && (
             <div>
               <SectionBar onRegen={() => regenerate("slides")} />
-            <div className="slides">
-              {(preview.slides || []).map((s, i) => (
-                <article className="slide" key={s.title + i}>
-                  <div className="num">Slide {i + 1} / {(preview.slides || []).length}</div>
-                  <div>
-                    <h3>{s.title}</h3>
-                    <p>{s.body}</p>
-                  </div>
-                </article>
-              ))}
-              <p><button className="btn ghost" onClick={() => downloadFile("06-presentation.html")}>Download presentation HTML</button></p>
-            </div>
+              <div className="slides">
+                {(preview.slides || []).map((s, i) => (
+                  <article className="slide" key={s.title + i}>
+                    <div className="num">Slide {i + 1} / {(preview.slides || []).length}</div>
+                    <div>
+                      <h3>{s.title}</h3>
+                      <p>{s.body}</p>
+                    </div>
+                  </article>
+                ))}
+                <p><button className="btn ghost" onClick={() => downloadFile("06-presentation.html")}>Download presentation HTML</button></p>
+              </div>
             </div>
           )}
 
@@ -376,7 +398,7 @@ export default function App() {
                   <button className="btn ghost sm" onClick={() => downloadFile(f.path)}>Download</button>
                 </div>
               ))}
-              <button className="btn dark" onClick={unlockAndDownload}>Download all as zip</button>
+              <button className="btn primary" onClick={unlockAndDownload}>Download all as zip</button>
             </div>
           )}
           {error && <div className="err">{error}</div>}
@@ -478,6 +500,23 @@ function EditModal({ section, onClose, onSave }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function SunIcon() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+    </svg>
   );
 }
 

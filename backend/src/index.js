@@ -342,7 +342,7 @@ function execZip(packDir, zipPath) {
   execFileSync("zip", ["-r", "-q", zipPath, "."], { cwd: packDir, timeout: 30000 });
 }
 
-const port = Number(process.env.PORT || 3001);
+const port = Number(process.env.API_PORT || 3001);
 app.listen(port, "0.0.0.0", () => {
   console.log(`ProjectBuddy API on ${port}`);
 });
