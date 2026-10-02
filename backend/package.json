@@ -1,0 +1,14 @@
+{
+  "name": "projectbuddy-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node src/index.js",
+    "test": "node test/pipeline.test.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}

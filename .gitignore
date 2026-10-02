@@ -156,6 +156,9 @@
 **/.flutter-plugins
 **/.flutter-plugins-dependencies
 
+# Runtime uploads and generated packs
+/data/
+
 # Compressed files
 *.zip
 *.rar

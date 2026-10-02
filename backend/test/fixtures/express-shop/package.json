@@ -1,0 +1,8 @@
+{
+  "name": "campus-shop",
+  "dependencies": {
+    "express": "^4.19.0",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^8.0.0"
+  }
+}
