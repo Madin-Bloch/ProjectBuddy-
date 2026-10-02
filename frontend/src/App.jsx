@@ -20,11 +20,18 @@ export default function App() {
   const [answers, setAnswers] = useState(emptyAnswers());
   const [editOpen, setEditOpen] = useState(null);
   const [theme, setTheme] = useState(() => localStorage.getItem("pb-theme") || "light");
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem("pb-theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     if (!project?.id) return;
@@ -168,6 +175,12 @@ export default function App() {
     setProject(null);
     setGithub("");
     setAnswers(emptyAnswers());
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+
+  function goStep(next) {
+    setStep(next);
+    window.scrollTo({ top: 0, behavior: "instant" });
   }
 
   async function regenerate(section) {
@@ -187,12 +200,7 @@ export default function App() {
 
   return (
     <div className="shell">
-      <div className="topbar">
-        <span className="mono">From code to submission</span> — report, diagrams, deck and viva from
-        your own repository
-      </div>
-
-      <header className="nav">
+      <header className={`nav ${scrolled ? "scrolled" : ""}`}>
         <div className="wrap nav-inner">
           <button className="brand" type="button" onClick={reset}>
             <div className="mark">P</div> ProjectBuddy
@@ -205,23 +213,21 @@ export default function App() {
             </nav>
           ) : (
             <nav className="nav-links">
-              <button className="btn link" type="button" onClick={reset}>
-                ← New project
-              </button>
+              <button className="btn link" type="button" onClick={reset}>← New project</button>
             </nav>
           )}
           <div className="nav-right">
             <button
-              className="icon-btn"
+              className="theme-switch"
               type="button"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              aria-label="Toggle theme"
+              aria-label="Toggle dark mode"
               title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             >
-              {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+              <span className="knob">{theme === "dark" ? <MoonIcon /> : <SunIcon />}</span>
             </button>
             <a className="btn primary" href="#start" onClick={(e) => { if (step !== "home") { e.preventDefault(); reset(); } }}>
-              Create project
+              Create Project
             </a>
           </div>
         </div>
@@ -240,8 +246,8 @@ export default function App() {
       )}
 
       {step === "scan" && (
-        <main className="wrap page studio">
-          <div className="panel" style={{ maxWidth: 660, margin: "40px auto 0" }}>
+        <main className="wrap page" key="scan">
+          <div className="panel" style={{ maxWidth: 660, margin: "48px auto 0" }}>
             <div className="kicker">{project?.status === "generating" ? "Generating" : "Analyzing"}</div>
             <h2>
               {project?.status === "generating"
@@ -261,7 +267,7 @@ export default function App() {
       )}
 
       {step === "questions" && project?.scan && (
-        <main className="wrap page studio">
+        <main className="wrap page" key="questions">
           <div className="panel" style={{ maxWidth: 860, margin: "0 auto" }}>
             <div className="kicker">Scan complete — your project, not a template</div>
             <h2>{project.scan.stackLabel || stackLine || "Project scan"}</h2>
@@ -270,7 +276,11 @@ export default function App() {
               {project.scan.routes?.length || 0} routes · {project.scan.models?.length || 0} models
               {project.scan.confidence != null ? ` · confidence ${Math.round(project.scan.confidence * 100)}%` : ""}
             </p>
-            <div className="chips">{(project.scan.modules || []).map((m) => <span className="chip" key={m}>{m}</span>)}</div>
+            <div className="chips" style={{ display: "flex", flexWrap: "wrap", gap: 8, margin: "14px 0" }}>
+              {(project.scan.modules || []).map((m) => (
+                <span key={m} className="anim-pop" style={{ background: "var(--surface-3)", borderRadius: 999, padding: "6px 12px", fontSize: 12.5, fontWeight: 500 }}>{m}</span>
+              ))}
+            </div>
             {!!project.scan.warnings?.length && <div className="warn">{project.scan.warnings.join(" ")}</div>}
             <HealthBlock health={project.scan.health} />
             <EvidenceBlock evidence={project.scan.evidence} />
@@ -301,7 +311,7 @@ export default function App() {
       )}
 
       {step === "preview" && (
-        <main className="wrap page studio">
+        <main className="wrap page" key="preview">
           <div className="studio-head">
             <div>
               <div className="kicker">Pack ready · grounded in source</div>
@@ -329,78 +339,80 @@ export default function App() {
             ))}
           </div>
 
-          {tab === "report" && (
-            <div>
-              <SectionBar onEdit={() => setEditOpen("report")} onRegen={() => regenerate("report")} />
-              <div className="doc" dangerouslySetInnerHTML={{ __html: innerHtml(preview.reportHtml) }} />
-            </div>
-          )}
-
-          {tab === "diagrams" && (
-            <div className="diagram-grid">
-              {(preview.diagrams || []).map((d) => (
-                <article className="diagram-card" key={d.id}>
-                  <header>
-                    {d.title}{d.omitted ? " (omitted)" : ""}
-                    <button className="btn ghost sm" onClick={() => downloadFile(`03-diagrams/${d.id}.svg`)}>Download SVG</button>
-                  </header>
-                  <div className="canvas" dangerouslySetInnerHTML={{ __html: d.svg }} />
-                </article>
-              ))}
-            </div>
-          )}
-
-          {tab === "slides" && (
-            <div>
-              <SectionBar onRegen={() => regenerate("slides")} />
-              <div className="slides">
-                {(preview.slides || []).map((s, i) => (
-                  <article className="slide" key={s.title + i}>
-                    <div className="num">Slide {i + 1} / {(preview.slides || []).length}</div>
-                    <div>
-                      <h3>{s.title}</h3>
-                      <p>{s.body}</p>
-                    </div>
-                  </article>
-                ))}
-                <p><button className="btn ghost" onClick={() => downloadFile("06-presentation.html")}>Download presentation HTML</button></p>
+          <div key={tab} className="anim-up">
+            {tab === "report" && (
+              <div>
+                <SectionBar onEdit={() => setEditOpen("report")} onRegen={() => regenerate("report")} />
+                <div className="doc" dangerouslySetInnerHTML={{ __html: innerHtml(preview.reportHtml) }} />
               </div>
-            </div>
-          )}
+            )}
 
-          {tab === "viva" && (
-            <div>
-              <SectionBar onRegen={() => regenerate("viva")} />
-              <div className="qa">
-                {(preview.viva || []).map((item, i) => (
-                  <article key={i}>
-                    <div className="tag">{item.category || "Viva"} · {item.source || "code"}</div>
-                    <strong>Q{i + 1}. {item.q}</strong>
-                    <p>{item.a}</p>
+            {tab === "diagrams" && (
+              <div className="diagram-grid">
+                {(preview.diagrams || []).map((d, i) => (
+                  <article className="diagram-card" key={d.id} style={{ animationDelay: `${i * 0.05}s` }}>
+                    <header>
+                      {d.title}{d.omitted ? " (omitted)" : ""}
+                      <button className="btn ghost sm" onClick={() => downloadFile(`03-diagrams/${d.id}.svg`)}>Download SVG</button>
+                    </header>
+                    <div className="canvas" dangerouslySetInnerHTML={{ __html: d.svg }} />
                   </article>
                 ))}
               </div>
-            </div>
-          )}
+            )}
 
-          {tab === "demo" && (
-            <div>
-              <SectionBar onEdit={() => setEditOpen("demo")} onRegen={() => regenerate("demo")} />
-              <div className="doc" dangerouslySetInnerHTML={{ __html: innerHtml(preview.demoHtml) }} />
-            </div>
-          )}
-
-          {tab === "files" && (
-            <div className="files">
-              {(preview.files || project.packFiles || []).map((f) => (
-                <div className="file-row" key={f.id || f.path}>
-                  <span>{f.label || f.path}</span>
-                  <button className="btn ghost sm" onClick={() => downloadFile(f.path)}>Download</button>
+            {tab === "slides" && (
+              <div>
+                <SectionBar onRegen={() => regenerate("slides")} />
+                <div className="slides">
+                  {(preview.slides || []).map((s, i) => (
+                    <article className="slide" key={s.title + i} style={{ animationDelay: `${i * 0.05}s` }}>
+                      <div className="num">Slide {i + 1} / {(preview.slides || []).length}</div>
+                      <div>
+                        <h3>{s.title}</h3>
+                        <p>{s.body}</p>
+                      </div>
+                    </article>
+                  ))}
+                  <p><button className="btn ghost" onClick={() => downloadFile("06-presentation.html")}>Download presentation HTML</button></p>
                 </div>
-              ))}
-              <button className="btn primary" onClick={unlockAndDownload}>Download all as zip</button>
-            </div>
-          )}
+              </div>
+            )}
+
+            {tab === "viva" && (
+              <div>
+                <SectionBar onRegen={() => regenerate("viva")} />
+                <div className="qa">
+                  {(preview.viva || []).map((item, i) => (
+                    <article key={i} style={{ animationDelay: `${i * 0.04}s` }}>
+                      <div className="tag">{item.category || "Viva"} · {item.source || "code"}</div>
+                      <strong>Q{i + 1}. {item.q}</strong>
+                      <p>{item.a}</p>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {tab === "demo" && (
+              <div>
+                <SectionBar onEdit={() => setEditOpen("demo")} onRegen={() => regenerate("demo")} />
+                <div className="doc" dangerouslySetInnerHTML={{ __html: innerHtml(preview.demoHtml) }} />
+              </div>
+            )}
+
+            {tab === "files" && (
+              <div className="files">
+                {(preview.files || project.packFiles || []).map((f, i) => (
+                  <div className="file-row" key={f.id || f.path} style={{ animationDelay: `${i * 0.03}s` }}>
+                    <span>{f.label || f.path}</span>
+                    <button className="btn ghost sm" onClick={() => downloadFile(f.path)}>Download</button>
+                  </div>
+                ))}
+                <button className="btn primary" onClick={unlockAndDownload}>Download all as zip</button>
+              </div>
+            )}
+          </div>
           {error && <div className="err">{error}</div>}
           {editOpen && (
             <EditModal
@@ -468,7 +480,7 @@ function EvidenceBlock({ evidence }) {
     <div className="evidence">
       <div className="health-k">Evidence from source</div>
       {evidence.slice(0, 8).map((e, i) => (
-        <div key={i} className="ev-row">
+        <div key={i} className="ev-row" style={{ animationDelay: `${i * 0.04}s` }}>
           <strong>{e.fact}</strong> {String(e.value)}
           <em>{(e.evidence || []).slice(0, 2).join(" · ")}</em>
         </div>
@@ -489,7 +501,7 @@ function SectionBar({ onEdit, onRegen }) {
 function EditModal({ section, onClose, onSave }) {
   const [text, setText] = useState("");
   return (
-    <div className="modal">
+    <div className="modal" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal-card">
         <h3>Edit {section}</h3>
         <p className="muted">Replace only this section. Do not invent tables or APIs that are not in your repo.</p>
@@ -505,7 +517,7 @@ function EditModal({ section, onClose, onSave }) {
 
 function SunIcon() {
   return (
-    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden>
       <circle cx="12" cy="12" r="4" />
       <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
     </svg>
@@ -514,7 +526,7 @@ function SunIcon() {
 
 function MoonIcon() {
   return (
-    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
     </svg>
   );
